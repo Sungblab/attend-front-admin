@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>디지털 출결관리 - 관리자</title>
+    <title>디지털 출결관리</title>
     <link href="css/output.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -28,790 +28,619 @@
       }
     </style>
   </head>
-  <body class="bg-gray-50 flex min-h-screen">
-    <!-- 사이드바 수정 -->
-    <aside
-      class="w-64 bg-white sticky top-0 border-r border-gray-200 min-h-screen"
-    >
-      <div class="p-4 border-b border-gray-200">
+  <body class="bg-gray-50">
+    <header>
+      <nav
+        class="container mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 flex justify-between items-center"
+      >
         <a
           href="/hub.html"
-          class="text-xl font-bold text-primary flex items-center"
+          class="text-xl sm:text-2xl font-bold text-primary flex items-center"
         >
           <i class="ri-calendar-check-fill mr-2"></i>
           디지털 출결관리
         </a>
-      </div>
-      <!-- 돌아가기 버튼 추가 -->
-      <div class="p-4 border-b border-gray-200">
-        <a
-          href="/hub.html"
-          class="w-full px-4 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg flex items-center justify-center transition-colors"
-        >
-          <i class="ri-arrow-left-line mr-2"></i>
-          메인으로 돌아가기
-        </a>
-      </div>
-      <nav class="p-4">
-        <ul class="space-y-2">
-          <li>
-            <button
-              onclick="showPage('statistics')"
-              id="statisticsTab"
-              class="w-full px-4 py-2 text-left text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center"
-            >
-              <i class="ri-bar-chart-line mr-2"></i>
-              통계
-            </button>
-          </li>
-          <li>
-            <button
-              onclick="showPage('excused')"
-              id="excusedTab"
-              class="w-full px-4 py-2 text-left text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center"
-            >
-              <i class="ri-calendar-check-line mr-2"></i>
-              인정출결 관리
-            </button>
-          </li>
-          <li>
-            <button
-              onclick="showPage('holiday')"
-              id="holidayTab"
-              class="w-full px-4 py-2 text-left text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center"
-            >
-              <i class="ri-calendar-event-line mr-2"></i>
-              휴일 관리
-            </button>
-          </li>
-          <li>
-            <button
-              onclick="showPage('settings')"
-              id="settingsTab"
-              class="w-full px-4 py-2 text-left text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center"
-            >
-              <i class="ri-settings-3-line mr-2"></i>
-              출결 설정
-            </button>
-          </li>
-        </ul>
       </nav>
-    </aside>
+    </header>
 
-    <!-- 메인 컨텐츠 영역 수정 -->
-    <div class="flex-1">
-      <main class="container mx-auto px-4 py-8">
-        <!-- 기존 page-content div들은 유지하되, 상단 네비게이션 탭 부분 제거 -->
-        <div id="statisticsPage" class="page-content">
-          <section class="bg-white rounded-lg shadow mb-6 p-6">
-            <h2 class="text-2xl font-bold mb-4">필터</h2>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >시작일</label
-                >
-                <input
-                  type="date"
-                  id="startDate"
-                  class="w-full rounded-lg border-gray-300"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >종료일</label
-                >
-                <input
-                  type="date"
-                  id="endDate"
-                  class="w-full rounded-lg border-gray-300"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >학년</label
-                >
-                <select
-                  id="gradeSelect"
-                  class="w-full rounded-lg border-gray-300"
-                >
-                  <option value="">전체</option>
-                  <option value="1">1학년</option>
-                  <option value="2">2학년</option>
-                  <option value="3">3학년</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >반</label
-                >
-                <select
-                  id="classSelect"
-                  class="w-full rounded-lg border-gray-300"
-                >
-                  <option value="">전체</option>
-                  <option value="1">1반</option>
-                  <option value="2">2반</option>
-                  <option value="3">3반</option>
-                  <option value="4">4반</option>
-                  <option value="5">5반</option>
-                  <option value="6">6반</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1"
-                  >학번</label
-                >
-                <input
-                  type="text"
-                  id="studentIdInput"
-                  placeholder="학번 검색"
-                  class="w-full rounded-lg border-gray-300"
-                />
-              </div>
-            </div>
-            <div class="mt-4 flex justify-between">
-              <div class="flex gap-4">
-                <button
-                  onclick="downloadExcel()"
-                  class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <i class="ri-file-excel-line"></i>
-                  요약 엑셀
-                </button>
-                <button
-                  onclick="downloadDetailExcel()"
-                  class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <i class="ri-file-excel-line"></i>
-                  상세 엑셀
-                </button>
-              </div>
-              <button
-                id="searchBtn"
-                class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+    <main class="container mx-auto px-4 py-8">
+      <!-- 네비게이션 탭 추가 -->
+      <div class="mb-6">
+        <nav
+          class="grid grid-cols-2 sm:flex sm:space-x-4 gap-2 border-b border-gray-200"
+        >
+          <button
+            onclick="showPage('statistics')"
+            id="statisticsTab"
+            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap active flex items-center justify-center"
+          >
+            <i class="ri-bar-chart-line mr-2"></i>
+            통계
+          </button>
+          <button
+            onclick="showPage('excused')"
+            id="excusedTab"
+            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap flex items-center justify-center"
+          >
+            <i class="ri-calendar-check-line mr-2"></i>
+            인정출결 관리
+          </button>
+          <button
+            onclick="showPage('holiday')"
+            id="holidayTab"
+            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap flex items-center justify-center"
+          >
+            <i class="ri-calendar-event-line mr-2"></i>
+            휴일 관리
+          </button>
+          <button
+            onclick="showPage('settings')"
+            id="settingsTab"
+            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap flex items-center justify-center"
+          >
+            <i class="ri-settings-3-line mr-2"></i>
+            출결 설정
+          </button>
+        </nav>
+      </div>
+
+      <!-- 통계 페이지 -->
+      <div id="statisticsPage" class="page-content">
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-4">필터</h2>
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >시작일</label
               >
-                <i class="ri-search-line mr-2"></i>검색
+              <input
+                type="date"
+                id="startDate"
+                class="w-full rounded-lg border-gray-300"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >종료일</label
+              >
+              <input
+                type="date"
+                id="endDate"
+                class="w-full rounded-lg border-gray-300"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >학년</label
+              >
+              <select
+                id="gradeSelect"
+                class="w-full rounded-lg border-gray-300"
+              >
+                <option value="">전체</option>
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >반</label
+              >
+              <select
+                id="classSelect"
+                class="w-full rounded-lg border-gray-300"
+              >
+                <option value="">전체</option>
+                <option value="1">1반</option>
+                <option value="2">2반</option>
+                <option value="3">3반</option>
+                <option value="4">4반</option>
+                <option value="5">5반</option>
+                <option value="6">6반</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >학번</label
+              >
+              <input
+                type="text"
+                id="studentIdInput"
+                placeholder="학번 검색"
+                class="w-full rounded-lg border-gray-300"
+              />
+            </div>
+          </div>
+          <div class="mt-4 flex justify-between">
+            <div class="flex gap-4">
+              <button
+                onclick="downloadExcel()"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <i class="ri-file-excel-line"></i>
+                요약 엑셀
+              </button>
+              <button
+                onclick="downloadDetailExcel()"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <i class="ri-file-excel-line"></i>
+                상세 엑셀
               </button>
             </div>
-          </section>
-          <section class="bg-white rounded-lg shadow mb-12">
-            <div class="p-6">
-              <h2 class="text-2xl font-bold mb-6 flex items-center">
-                <i class="ri-file-list-line mr-2"></i>
-                상세 통계
-              </h2>
-
-              <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr class="bg-gray-50">
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-user-line mr-2"></i>
-                          학번
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-profile-line mr-2"></i>
-                          이름
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-building-line mr-2"></i>
-                          학년-반-번호
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-bar-chart-line mr-2"></i>
-                          출석률
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-calendar-check-line mr-2"></i>
-                          출석/지각/결석
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-time-line mr-2"></i>
-                          평균 지각시간
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-calendar-todo-line mr-2"></i>
-                          오늘의 출석
-                        </div>
-                      </th>
-                      <th
-                        class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div class="flex items-center">
-                          <i class="ri-file-search-line mr-2"></i>
-                          상세
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    id="statsTableBody"
-                    class="bg-white divide-y divide-gray-200"
-                  >
-                    <!-- 동적으로 추가될 내용 -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-
-          <section class="bg-white rounded-lg shadow mb-6 p-6">
-            <h2 class="text-2xl font-bold mb-6 flex items-center">
-              <i class="ri-bar-chart-box-line mr-2"></i>
-              전체 통계
-            </h2>
-            <div
-              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6"
+            <button
+              id="searchBtn"
+              class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
             >
-              <!-- 전체 학생 카드 -->
-              <div
-                class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-blue-600 bg-blue-100 p-2 rounded-lg">
-                    <i class="ri-user-line text-xl"></i>
-                  </span>
-                  <span
-                    class="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full"
-                    >전체</span
-                  >
-                </div>
-                <h3 class="text-sm font-medium text-gray-600 mb-1">
-                  전체 학생
-                </h3>
-                <p class="text-2xl font-bold text-gray-900" id="totalStudents">
-                  -
-                </p>
-              </div>
+              <i class="ri-search-line mr-2"></i>검색
+            </button>
+          </div>
+        </section>
+        <section class="bg-white rounded-lg shadow mb-12">
+          <div class="p-6">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+              <i class="ri-file-list-line mr-2"></i>
+              상세 통계
+            </h2>
 
-              <!-- 출석률 카드 -->
-              <div
-                class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-green-600 bg-green-100 p-2 rounded-lg">
-                    <i class="ri-check-line text-xl"></i>
-                  </span>
-                  <span
-                    class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full"
-                    >출석</span
-                  >
-                </div>
-                <h3 class="text-sm font-medium text-gray-600 mb-1">출석률</h3>
-                <p class="text-2xl font-bold text-gray-900" id="attendanceRate">
-                  -
-                </p>
-              </div>
-
-              <!-- 지각률 카드 -->
-              <div
-                class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-yellow-600 bg-yellow-100 p-2 rounded-lg">
-                    <i class="ri-time-line text-xl"></i>
-                  </span>
-                  <span
-                    class="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full"
-                    >지각</span
-                  >
-                </div>
-                <h3 class="text-sm font-medium text-gray-600 mb-1">지각률</h3>
-                <div class="flex items-baseline gap-2">
-                  <p class="text-2xl font-bold text-gray-900" id="lateRate">
-                    -
-                  </p>
-                  <p class="text-sm text-gray-500" id="avgLateTime">평균 -분</p>
-                </div>
-              </div>
-
-              <!-- 결석률 카드 -->
-              <div
-                class="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border border-red-100"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-red-600 bg-red-100 p-2 rounded-lg">
-                    <i class="ri-close-circle-line text-xl"></i>
-                  </span>
-                  <span
-                    class="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full"
-                    >결석</span
-                  >
-                </div>
-                <h3 class="text-sm font-medium text-gray-600 mb-1">결석률</h3>
-                <p class="text-2xl font-bold text-gray-900" id="absentRate">
-                  -
-                </p>
-              </div>
-
-              <!-- 인정출결률 카드 -->
-              <div
-                class="bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-4 border border-purple-100"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-purple-600 bg-purple-100 p-2 rounded-lg">
-                    <i class="ri-calendar-check-line text-xl"></i>
-                  </span>
-                  <span
-                    class="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full"
-                    >인정</span
-                  >
-                </div>
-                <h3 class="text-sm font-medium text-gray-600 mb-1">
-                  인정출결률
-                </h3>
-                <p class="text-2xl font-bold text-gray-900" id="excusedRate">
-                  -
-                </p>
-              </div>
-
-              <!-- 전체 출석일수 카드 -->
-              <div
-                class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <span class="text-gray-600 bg-gray-100 p-2 rounded-lg">
-                    <i class="ri-calendar-line text-xl"></i>
-                  </span>
-                  <span
-                    class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
-                    >기간</span
-                  >
-                </div>
-                <h3 class="text-sm font-medium text-gray-600 mb-1">
-                  전체 출석일수
-                </h3>
-                <p class="text-2xl font-bold text-gray-900" id="totalDays">-</p>
-              </div>
-            </div>
-          </section>
-
-          <section class="bg-white rounded-lg shadow mb-6 p-6">
-            <h2 class="text-2xl font-bold mb-4">이달의 통계</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div
-                class="bg-gradient-to-br from-green-50 to-blue-50 p-4 rounded-lg"
-              >
-                <h3 class="text-lg font-semibold mb-3">출석왕 TOP 3</h3>
-                <div id="attendanceKings" class="space-y-2">
-                  <!-- 동적으로 추가될 내용 -->
-                </div>
-              </div>
-
-              <div
-                class="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg"
-              >
-                <h3 class="text-lg font-semibold mb-3">개선왕 TOP 3</h3>
-                <div id="improvementKings" class="space-y-2">
-                  <!-- 동적으로 추가될 내용 -->
-                </div>
-              </div>
-
-              <div
-                class="bg-gradient-to-br from-yellow-50 to-red-50 p-4 rounded-lg"
-              >
-                <h3 class="text-lg font-semibold mb-3">지각왕 TOP 3</h3>
-                <div id="lateKings" class="space-y-2">
-                  <!-- 동적으로 추가될 내용 -->
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div id="excusedPage" class="page-content hidden">
-          <section class="bg-white rounded-lg shadow mb-6 p-6">
-            <h2 class="text-2xl font-bold mb-4">인정출결 관리</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- 개별 인정출결 등록 폼 -->
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-3">개별 인정출결 등록</h3>
-                <form id="excuseForm" class="space-y-4">
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                        >학번</label
-                      >
-                      <input
-                        type="text"
-                        id="excuseStudentId"
-                        class="w-full rounded-lg border-gray-300"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                        >날짜</label
-                      >
-                      <input
-                        type="date"
-                        id="excuseDate"
-                        class="w-full rounded-lg border-gray-300"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1"
-                      >사유</label
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr class="bg-gray-50">
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                    <textarea
-                      id="excuseReason"
-                      class="w-full rounded-lg border-gray-300 resize-none"
-                      rows="3"
-                      required
-                    ></textarea>
-                  </div>
-                  <button
-                    type="submit"
-                    class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    인정출결 처리
-                  </button>
-                </form>
-              </div>
-
-              <!-- 단체 인정출결 등록 폼 추가 -->
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-3">단체 인정출결 등록</h3>
-                <form id="groupExcuseForm" class="space-y-4">
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                        >날짜</label
-                      >
-                      <input
-                        type="date"
-                        id="groupExcuseDate"
-                        class="w-full rounded-lg border-gray-300"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                        >학년</label
-                      >
-                      <select
-                        id="groupExcuseGrade"
-                        class="w-full rounded-lg border-gray-300"
-                      >
-                        <option value="">전체</option>
-                        <option value="1">1학년</option>
-                        <option value="2">2학년</option>
-                        <option value="3">3학년</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1"
-                      >반</label
+                      <div class="flex items-center">
+                        <i class="ri-user-line mr-2"></i>
+                        학번
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                    <select
-                      id="groupExcuseClass"
-                      class="w-full rounded-lg border-gray-300"
+                      <div class="flex items-center">
+                        <i class="ri-profile-line mr-2"></i>
+                        이름
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                      <option value="">전체</option>
-                      <option value="1">1반</option>
-                      <option value="2">2반</option>
-                      <option value="3">3반</option>
-                      <option value="4">4반</option>
-                      <option value="5">5반</option>
-                      <option value="6">6반</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1"
-                      >사유</label
+                      <div class="flex items-center">
+                        <i class="ri-building-line mr-2"></i>
+                        학년-반-번호
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                    <textarea
-                      id="groupExcuseReason"
-                      class="w-full rounded-lg border-gray-300 resize-none"
-                      rows="3"
-                      required
-                    ></textarea>
-                  </div>
-                  <button
-                    type="submit"
-                    class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    단체 인정출결 처리
-                  </button>
-                </form>
-              </div>
-
-              <!-- 최근 인정출결 목록 -->
-              <div class="bg-gray-50 p-4 rounded-lg lg:col-span-2">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-lg font-semibold">인정출결 목록</h3>
-                  <div class="flex gap-2">
-                    <select
-                      id="excusedGrade"
-                      class="rounded-lg border-gray-300"
+                      <div class="flex items-center">
+                        <i class="ri-bar-chart-line mr-2"></i>
+                        출석률
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                      <option value="">전체 학년</option>
-                      <option value="1">1학년</option>
-                      <option value="2">2학년</option>
-                      <option value="3">3학년</option>
-                    </select>
-                    <select
-                      id="excusedClass"
-                      class="rounded-lg border-gray-300"
+                      <div class="flex items-center">
+                        <i class="ri-calendar-check-line mr-2"></i>
+                        출석/지각/결석
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                      <option value="">전체 반</option>
-                      <option value="1">1반</option>
-                      <option value="2">2반</option>
-                      <option value="3">3반</option>
-                      <option value="4">4반</option>
-                      <option value="5">5반</option>
-                      <option value="6">6반</option>
-                    </select>
-                    <input
-                      type="date"
-                      id="excusedStartDate"
-                      class="rounded-lg border-gray-300"
-                    />
-                    <input
-                      type="date"
-                      id="excusedEndDate"
-                      class="rounded-lg border-gray-300"
-                    />
-                    <button
-                      onclick="updateExcusedList()"
-                      class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                      <div class="flex items-center">
+                        <i class="ri-time-line mr-2"></i>
+                        평균 지각시간
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                      조회
-                    </button>
-                    <button
-                      onclick="downloadExcusedExcel()"
-                      class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center"
+                      <div class="flex items-center">
+                        <i class="ri-calendar-todo-line mr-2"></i>
+                        오늘의 출석
+                      </div>
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5 mr-2"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                          clip-rule="evenodd"
-                        />
-                      </svg>
-                      엑셀 다운로드
-                    </button>
-                  </div>
-                </div>
-                <div
-                  id="excusedList"
-                  class="space-y-2 max-h-[400px] overflow-y-auto"
+                      <div class="flex items-center">
+                        <i class="ri-file-search-line mr-2"></i>
+                        상세
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="statsTableBody"
+                  class="bg-white divide-y divide-gray-200"
                 >
                   <!-- 동적으로 추가될 내용 -->
-                </div>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="ri-bar-chart-box-line mr-2"></i>
+            전체 통계
+          </h2>
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6"
+          >
+            <!-- 전체 학생 카드 -->
+            <div
+              class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-blue-600 bg-blue-100 p-2 rounded-lg">
+                  <i class="ri-user-line text-xl"></i>
+                </span>
+                <span
+                  class="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded-full"
+                  >전체</span
+                >
+              </div>
+              <h3 class="text-sm font-medium text-gray-600 mb-1">전체 학생</h3>
+              <p class="text-2xl font-bold text-gray-900" id="totalStudents">
+                -
+              </p>
+            </div>
+
+            <!-- 출석률 카드 -->
+            <div
+              class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-green-600 bg-green-100 p-2 rounded-lg">
+                  <i class="ri-check-line text-xl"></i>
+                </span>
+                <span
+                  class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full"
+                  >출석</span
+                >
+              </div>
+              <h3 class="text-sm font-medium text-gray-600 mb-1">출석률</h3>
+              <p class="text-2xl font-bold text-gray-900" id="attendanceRate">
+                -
+              </p>
+            </div>
+
+            <!-- 지각률 카드 -->
+            <div
+              class="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl p-4 border border-yellow-100"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-yellow-600 bg-yellow-100 p-2 rounded-lg">
+                  <i class="ri-time-line text-xl"></i>
+                </span>
+                <span
+                  class="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full"
+                  >지각</span
+                >
+              </div>
+              <h3 class="text-sm font-medium text-gray-600 mb-1">지각률</h3>
+              <div class="flex items-baseline gap-2">
+                <p class="text-2xl font-bold text-gray-900" id="lateRate">-</p>
+                <p class="text-sm text-gray-500" id="avgLateTime">평균 -분</p>
               </div>
             </div>
-          </section>
-        </div>
 
-        <div id="holidayPage" class="page-content hidden">
-          <section class="bg-white rounded-lg shadow mb-6 p-6">
-            <h2 class="text-2xl font-bold mb-4">휴일 관리</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <!-- NEIS 학사일정 동기화 폼 수정 -->
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-3">NEIS 학사일정 동기화</h3>
-                <form id="neisForm" class="space-y-4">
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                        >년도</label
-                      >
-                      <input
-                        type="number"
-                        id="neisYear"
-                        class="w-full rounded-lg border-gray-300"
-                        min="2024"
-                        max="2030"
-                        value="2024"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 mb-1"
-                        >월</label
-                      >
-                      <select
-                        id="neisMonth"
-                        class="w-full rounded-lg border-gray-300"
-                        required
-                      >
-                        <option value="">선택</option>
-                        <option value="1">1월</option>
-                        <option value="2">2월</option>
-                        <option value="3">3월</option>
-                        <option value="4">4월</option>
-                        <option value="5">5월</option>
-                        <option value="6">6월</option>
-                        <option value="7">7월</option>
-                        <option value="8">8월</option>
-                        <option value="9">9월</option>
-                        <option value="10">10월</option>
-                        <option value="11">11월</option>
-                        <option value="12">12월</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <button
-                      type="button"
-                      onclick="viewSchedule()"
-                      class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      <i class="ri-calendar-line mr-2"></i>
-                      학사일정 조회
-                    </button>
-                    <button
-                      type="submit"
-                      class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      <i class="ri-download-cloud-line mr-2"></i>
-                      휴일 자동 등록
-                    </button>
-                  </div>
-                </form>
+            <!-- 결석률 카드 -->
+            <div
+              class="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border border-red-100"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-red-600 bg-red-100 p-2 rounded-lg">
+                  <i class="ri-close-circle-line text-xl"></i>
+                </span>
+                <span
+                  class="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full"
+                  >결석</span
+                >
               </div>
+              <h3 class="text-sm font-medium text-gray-600 mb-1">결석률</h3>
+              <p class="text-2xl font-bold text-gray-900" id="absentRate">-</p>
+            </div>
 
-              <!-- 수동 휴일 등록 폼... -->
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-3">휴일 등록</h3>
-                <form id="holidayForm" class="space-y-4">
+            <!-- 인정출결률 카드 -->
+            <div
+              class="bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl p-4 border border-purple-100"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-purple-600 bg-purple-100 p-2 rounded-lg">
+                  <i class="ri-calendar-check-line text-xl"></i>
+                </span>
+                <span
+                  class="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full"
+                  >인정</span
+                >
+              </div>
+              <h3 class="text-sm font-medium text-gray-600 mb-1">인정출결률</h3>
+              <p class="text-2xl font-bold text-gray-900" id="excusedRate">-</p>
+            </div>
+
+            <!-- 전체 출석일수 카드 -->
+            <div
+              class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100"
+            >
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-gray-600 bg-gray-100 p-2 rounded-lg">
+                  <i class="ri-calendar-line text-xl"></i>
+                </span>
+                <span
+                  class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
+                  >기간</span
+                >
+              </div>
+              <h3 class="text-sm font-medium text-gray-600 mb-1">
+                전체 출석일수
+              </h3>
+              <p class="text-2xl font-bold text-gray-900" id="totalDays">-</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-4">이달의 통계</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              class="bg-gradient-to-br from-green-50 to-blue-50 p-4 rounded-lg"
+            >
+              <h3 class="text-lg font-semibold mb-3">출석왕 TOP 3</h3>
+              <div id="attendanceKings" class="space-y-2">
+                <!-- 동적으로 추가될 내용 -->
+              </div>
+            </div>
+
+            <div
+              class="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg"
+            >
+              <h3 class="text-lg font-semibold mb-3">개선왕 TOP 3</h3>
+              <div id="improvementKings" class="space-y-2">
+                <!-- 동적으로 추가될 내용 -->
+              </div>
+            </div>
+
+            <div
+              class="bg-gradient-to-br from-yellow-50 to-red-50 p-4 rounded-lg"
+            >
+              <h3 class="text-lg font-semibold mb-3">지각왕 TOP 3</h3>
+              <div id="lateKings" class="space-y-2">
+                <!-- 동적으로 추가될 내용 -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 인정출결 관리 페이지 -->
+      <div id="excusedPage" class="page-content hidden">
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-4">인정출결 관리</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 개별 인정출결 등록 폼 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold mb-3">개별 인정출결 등록</h3>
+              <form id="excuseForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >학번</label
+                    >
+                    <input
+                      type="text"
+                      id="excuseStudentId"
+                      class="w-full rounded-lg border-gray-300"
+                      required
+                    />
+                  </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1"
                       >날짜</label
                     >
                     <input
                       type="date"
-                      id="holidayDate"
+                      id="excuseDate"
+                      class="w-full rounded-lg border-gray-300"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >사유</label
+                  >
+                  <textarea
+                    id="excuseReason"
+                    class="w-full rounded-lg border-gray-300 resize-none"
+                    rows="3"
+                    required
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  인정출결 처리
+                </button>
+              </form>
+            </div>
+
+            <!-- 단체 인정출결 등록 폼 추가 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold mb-3">단체 인정출결 등록</h3>
+              <form id="groupExcuseForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >날짜</label
+                    >
+                    <input
+                      type="date"
+                      id="groupExcuseDate"
                       class="w-full rounded-lg border-gray-300"
                       required
                     />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1"
-                      >사유</label
+                      >학년</label
+                    >
+                    <select
+                      id="groupExcuseGrade"
+                      class="w-full rounded-lg border-gray-300"
+                    >
+                      <option value="">전체</option>
+                      <option value="1">1학년</option>
+                      <option value="2">2학년</option>
+                      <option value="3">3학년</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >반</label
+                  >
+                  <select
+                    id="groupExcuseClass"
+                    class="w-full rounded-lg border-gray-300"
+                  >
+                    <option value="">전체</option>
+                    <option value="1">1반</option>
+                    <option value="2">2반</option>
+                    <option value="3">3반</option>
+                    <option value="4">4반</option>
+                    <option value="5">5반</option>
+                    <option value="6">6반</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >사유</label
+                  >
+                  <textarea
+                    id="groupExcuseReason"
+                    class="w-full rounded-lg border-gray-300 resize-none"
+                    rows="3"
+                    required
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  단체 인정출결 처리
+                </button>
+              </form>
+            </div>
+
+            <!-- 최근 인정출결 목록 -->
+            <div class="bg-gray-50 p-4 rounded-lg lg:col-span-2">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">인정출결 목록</h3>
+                <div class="flex gap-2">
+                  <select id="excusedGrade" class="rounded-lg border-gray-300">
+                    <option value="">전체 학년</option>
+                    <option value="1">1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                  </select>
+                  <select id="excusedClass" class="rounded-lg border-gray-300">
+                    <option value="">전체 반</option>
+                    <option value="1">1반</option>
+                    <option value="2">2반</option>
+                    <option value="3">3반</option>
+                    <option value="4">4반</option>
+                    <option value="5">5반</option>
+                    <option value="6">6반</option>
+                  </select>
+                  <input
+                    type="date"
+                    id="excusedStartDate"
+                    class="rounded-lg border-gray-300"
+                  />
+                  <input
+                    type="date"
+                    id="excusedEndDate"
+                    class="rounded-lg border-gray-300"
+                  />
+                  <button
+                    onclick="updateExcusedList()"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    조회
+                  </button>
+                  <button
+                    onclick="downloadExcusedExcel()"
+                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5 mr-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    엑셀 다운로드
+                  </button>
+                </div>
+              </div>
+              <div
+                id="excusedList"
+                class="space-y-2 max-h-[400px] overflow-y-auto"
+              >
+                <!-- 동적으로 추가될 내용 -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 휴일 관리 페이지 -->
+      <div id="holidayPage" class="page-content hidden">
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-4">휴일 관리</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- NEIS 학사일정 동기화 폼 수정 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold mb-3">NEIS 학사일정 동기화</h3>
+              <form id="neisForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >년도</label
                     >
                     <input
-                      type="text"
-                      id="holidayReason"
+                      type="number"
+                      id="neisYear"
                       class="w-full rounded-lg border-gray-300"
-                      placeholder="예: 개교기념일, 현충일 등"
+                      min="2024"
+                      max="2030"
+                      value="2024"
                       required
                     />
                   </div>
-                  <button
-                    type="submit"
-                    class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    휴일 등록
-                  </button>
-                </form>
-              </div>
-
-              <!-- 학사일정 목록 -->
-              <div
-                id="scheduleList"
-                class="bg-gray-50 p-4 rounded-lg lg:col-span-2 hidden"
-              >
-                <div class="flex justify-between items-center mb-3">
-                  <h3 class="text-lg font-semibold">학사일정 목록</h3>
-                  <button
-                    onclick="document.getElementById('scheduleList').classList.add('hidden')"
-                    class="text-gray-500 hover:text-gray-700"
-                  >
-                    <i class="ri-close-line text-xl"></i>
-                  </button>
-                </div>
-                <div class="overflow-x-auto">
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          날짜
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          일정
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          휴일여부
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          등록상태
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody
-                      id="scheduleTableBody"
-                      class="bg-white divide-y divide-gray-200"
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >월</label
                     >
-                      <!-- 동적으로 추가될 내용 -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- 등록된 휴일 목록... -->
-              <div class="bg-gray-50 p-4 rounded-lg lg:col-span-2">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-lg font-semibold">등록된 휴일 목록</h3>
-                  <div class="flex space-x-2">
-                    <select id="holidayYear" class="rounded-lg border-gray-300">
-                      <option value="">연도 선택</option>
-                    </select>
                     <select
-                      id="holidayMonth"
-                      class="rounded-lg border-gray-300"
+                      id="neisMonth"
+                      class="w-full rounded-lg border-gray-300"
+                      required
                     >
-                      <option value="">월 선택</option>
+                      <option value="">선택</option>
                       <option value="1">1월</option>
                       <option value="2">2월</option>
                       <option value="3">3월</option>
@@ -827,116 +656,265 @@
                     </select>
                   </div>
                 </div>
-
-                <div
-                  id="holidayList"
-                  class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                >
-                  <!-- 동적으로 추가될 월별 휴일 카드들 -->
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div id="settingsPage" class="page-content hidden">
-          <section class="bg-white rounded-lg shadow mb-6 p-6">
-            <h2 class="text-2xl font-bold mb-4">출결 시간 설정</h2>
-            <!-- 현재 설정 표시 영역 -->
-            <div id="currentSettings" class="mb-6"></div>
-
-            <!-- 설정 폼 -->
-            <div class="bg-gray-50 p-4 rounded-lg">
-              <form id="attendanceSettingsForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      출석 시작 시간
-                    </label>
-                    <input
-                      type="time"
-                      id="startTime"
-                      class="w-full rounded-lg border-gray-300"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      정상 출석 마감 시간
-                    </label>
-                    <input
-                      type="time"
-                      id="normalTime"
-                      class="w-full rounded-lg border-gray-300"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      지각 마감 시간
-                    </label>
-                    <input
-                      type="time"
-                      id="lateTime"
-                      class="w-full rounded-lg border-gray-300"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      자동 결석 처리 시간
-                    </label>
-                    <input
-                      type="time"
-                      id="autoAbsentTime"
-                      class="w-full rounded-lg border-gray-300"
-                      required
-                    />
-                  </div>
-                </div>
                 <div class="flex justify-between items-center">
-                  <div class="flex gap-4">
-                    <button
-                      type="button"
-                      id="processAbsentBtn"
-                      class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-                    >
-                      수동 결석 처리
-                    </button>
-                    <button
-                      type="button"
-                      id="processLateBtn"
-                      class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
-                    >
-                      수동 지각 처리
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onclick="viewSchedule()"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    <i class="ri-calendar-line mr-2"></i>
+                    학사일정 조회
+                  </button>
                   <button
                     type="submit"
-                    class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark"
+                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                   >
-                    설정 저장
+                    <i class="ri-download-cloud-line mr-2"></i>
+                    휴일 자동 등록
                   </button>
                 </div>
               </form>
             </div>
-          </section>
 
-          <!-- 처리 로그 섹션 추가 -->
-          <section class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-2xl font-bold mb-4">처리 로그</h2>
+            <!-- 수동 휴일 등록 폼... -->
             <div class="bg-gray-50 p-4 rounded-lg">
-              <div
-                id="processLogs"
-                class="space-y-4 max-h-[400px] overflow-y-auto"
-              >
-                <!-- 동적으로 로그가 추가될 영역 -->
+              <h3 class="text-lg font-semibold mb-3">휴일 등록</h3>
+              <form id="holidayForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >날짜</label
+                  >
+                  <input
+                    type="date"
+                    id="holidayDate"
+                    class="w-full rounded-lg border-gray-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >사유</label
+                  >
+                  <input
+                    type="text"
+                    id="holidayReason"
+                    class="w-full rounded-lg border-gray-300"
+                    placeholder="예: 개교기념일, 현충일 등"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  휴일 등록
+                </button>
+              </form>
+            </div>
+
+            <!-- 학사일정 목록 -->
+            <div
+              id="scheduleList"
+              class="bg-gray-50 p-4 rounded-lg lg:col-span-2 hidden"
+            >
+              <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold">학사일정 목록</h3>
+                <button
+                  onclick="document.getElementById('scheduleList').classList.add('hidden')"
+                  class="text-gray-500 hover:text-gray-700"
+                >
+                  <i class="ri-close-line text-xl"></i>
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        날짜
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        일정
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        휴일여부
+                      </th>
+                      <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        등록상태
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="scheduleTableBody"
+                    class="bg-white divide-y divide-gray-200"
+                  >
+                    <!-- 동적으로 추가될 내용 -->
+                  </tbody>
+                </table>
               </div>
             </div>
-          </section>
+
+            <!-- 등록된 휴일 목록... -->
+            <div class="bg-gray-50 p-4 rounded-lg lg:col-span-2">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">등록된 휴일 목록</h3>
+                <div class="flex space-x-2">
+                  <select id="holidayYear" class="rounded-lg border-gray-300">
+                    <option value="">연도 선택</option>
+                  </select>
+                  <select id="holidayMonth" class="rounded-lg border-gray-300">
+                    <option value="">월 선택</option>
+                    <option value="1">1월</option>
+                    <option value="2">2월</option>
+                    <option value="3">3월</option>
+                    <option value="4">4월</option>
+                    <option value="5">5월</option>
+                    <option value="6">6월</option>
+                    <option value="7">7월</option>
+                    <option value="8">8월</option>
+                    <option value="9">9월</option>
+                    <option value="10">10월</option>
+                    <option value="11">11월</option>
+                    <option value="12">12월</option>
+                  </select>
+                </div>
+              </div>
+
+              <div
+                id="holidayList"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              >
+                <!-- 동적으로 추가될 월별 휴일 카드들 -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 출결 설정 페이지 -->
+      <div id="settingsPage" class="page-content hidden">
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-4">출결 시간 설정</h2>
+          <!-- 현재 설정 표시 영역 -->
+          <div id="currentSettings" class="mb-6"></div>
+
+          <!-- 설정 폼 -->
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <form id="attendanceSettingsForm" class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    출석 시작 시간
+                  </label>
+                  <input
+                    type="time"
+                    id="startTime"
+                    class="w-full rounded-lg border-gray-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    정상 출석 마감 시간
+                  </label>
+                  <input
+                    type="time"
+                    id="normalTime"
+                    class="w-full rounded-lg border-gray-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    지각 마감 시간
+                  </label>
+                  <input
+                    type="time"
+                    id="lateTime"
+                    class="w-full rounded-lg border-gray-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    자동 결석 처리 시간
+                  </label>
+                  <input
+                    type="time"
+                    id="autoAbsentTime"
+                    class="w-full rounded-lg border-gray-300"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="flex justify-between items-center">
+                <div class="flex gap-4">
+                  <button
+                    type="button"
+                    id="processAbsentBtn"
+                    class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                  >
+                    수동 결석 처리
+                  </button>
+                  <button
+                    type="button"
+                    id="processLateBtn"
+                    class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
+                  >
+                    수동 지각 처리
+                  </button>
+                </div>
+                <button
+                  type="submit"
+                  class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark"
+                >
+                  설정 저장
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- 처리 로그 섹션 추가 -->
+        <section class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-2xl font-bold mb-4">처리 로그</h2>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div
+              id="processLogs"
+              class="space-y-4 max-h-[400px] overflow-y-auto"
+            >
+              <!-- 동적으로 로그가 추가될 영역 -->
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="bg-white text-gray-600 py-2 sm:py-4 mt-auto">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col items-center text-center">
+          <p class="mb-2">이메일: sungblab@gmail.com</p>
+          <a
+            href="https://sungblab.vercel.app/blog"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary hover:underline mb-4"
+            >개발자 블로그로 가기</a
+          >
         </div>
-      </main>
-    </div>
+        <div class="text-center">
+          <p>&copy; 2024 디지털 출결관리. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
 
     <div
       id="studentDetailModal"
@@ -1027,17 +1005,20 @@
 
         // 모든 탭 비활성화
         document.querySelectorAll("nav button").forEach((tab) => {
-          tab.classList.remove("bg-primary", "text-white");
-          tab.classList.add("text-gray-700", "hover:bg-gray-100");
+          tab.classList.remove("text-primary", "border-b-2", "border-primary");
+          tab.classList.add("text-gray-500");
         });
 
         // 선택된 페이지 보이기
         document.getElementById(`${pageId}Page`).classList.remove("hidden");
 
         // 선택된 탭 활성화
-        const selectedTab = document.getElementById(`${pageId}Tab`);
-        selectedTab.classList.remove("text-gray-700", "hover:bg-gray-100");
-        selectedTab.classList.add("bg-primary", "text-white");
+        document
+          .getElementById(`${pageId}Tab`)
+          .classList.remove("text-gray-500");
+        document
+          .getElementById(`${pageId}Tab`)
+          .classList.add("text-primary", "border-b-2", "border-primary");
 
         // 페이지별 데이터 로드
         switch (pageId) {
