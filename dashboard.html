@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>디지털 출결관리 - 관리자</title>
     <link href="css/output.css" rel="stylesheet" />
+
+    <!-- PWA 설정 -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="출결관리" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta
+      name="description"
+      content="디지털 출결관리 - 관리자 시스템 - 관리자"
+    />
+    <!-- PWA 설정 끝 -->
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="js/axios-config.js"></script>
     <link
@@ -38,6 +56,12 @@
           <i class="ri-calendar-check-fill mr-3 text-primary-500"></i>
           디지털 출결관리 - 관리자
         </a>
+        <button
+          id="install-pwa"
+          class="hidden bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center"
+        >
+          <i class="ri-download-line mr-1"></i> 앱 설치
+        </button>
       </nav>
     </header>
 
@@ -355,14 +379,6 @@
         return true;
       }
 
-      // 페이지 로드 즉시 인증 확인
-      if (!checkAuthAndRedirect()) {
-        console.log(
-          "Auth check failed on page load, stopping script execution"
-        ); // 디버깅 로그
-        throw new Error("Authentication required");
-      }
-
       const gradeSelect = document.getElementById("grade");
       const classSelect = document.getElementById("class");
       const userTableBody = document.getElementById("userTableBody");
@@ -371,7 +387,6 @@
       classSelect.addEventListener("change", fetchUsers);
 
       async function fetchUsers() {
-        console.log("Fetching users"); // 디버깅 로그
         try {
           const grade = gradeSelect.value;
           const classNumber = classSelect.value;
@@ -1023,5 +1038,7 @@
         }
       });
     </script>
+    <!-- PWA 등록 스크립트 추가 -->
+    <script src="js/pwa-register.js"></script>
   </body>
 </html>
