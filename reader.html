@@ -518,25 +518,19 @@
 
           // 학생 정보 표시 로직 수정
           let studentInfo = "";
-          if (
-            data.type === "PRESENT_SUCCESS" ||
-            data.type === "LATE_SUCCESS" ||
-            data.type === "ABSENT_SUCCESS"
-          ) {
-            if (data.attendance) {
-              const { studentId, name } = data.attendance;
-              if (studentId && name) {
-                studentInfo = `[${studentId}] ${name}`;
-              } else if (studentId) {
-                studentInfo = `[${studentId}]`;
-              }
-            } else if (data.details?.student) {
-              const { studentId, name } = data.details.student;
-              if (studentId && name) {
-                studentInfo = `[${studentId}] ${name}`;
-              } else if (studentId) {
-                studentInfo = `[${studentId}]`;
-              }
+          if (data.attendance) {
+            const { studentId, name } = data.attendance;
+            if (studentId && name) {
+              studentInfo = `[${studentId}] ${name}`;
+            } else if (studentId) {
+              studentInfo = `[${studentId}]`;
+            }
+          } else if (data.details?.student) {
+            const { studentId, name } = data.details.student;
+            if (studentId && name) {
+              studentInfo = `[${studentId}] ${name}`;
+            } else if (studentId) {
+              studentInfo = `[${studentId}]`;
             }
           }
 

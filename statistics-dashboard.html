@@ -492,14 +492,93 @@
                   type="submit"
                   class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
                 >
-                  인정출결 처리
+                  인정결석 처리
                 </button>
               </form>
             </div>
 
-            <!-- 단체 인정출결 등록 폼 추가 -->
+            <!-- 개별 인정지각 등록 폼 추가 -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold mb-3">개별 인정지각 등록</h3>
+              <form id="excuseLateForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >학번</label
+                    >
+                    <input
+                      type="text"
+                      id="excuseLateStudentId"
+                      class="w-full rounded-lg border-gray-300"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >날짜</label
+                    >
+                    <input
+                      type="date"
+                      id="excuseLateDate"
+                      class="w-full rounded-lg border-gray-300"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >지각 시간(분)</label
+                    >
+                  <input
+                    type="number"
+                    id="excuseLateMinutes"
+                    class="w-full rounded-lg border-gray-300"
+                    min="1"
+                    max="180"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >사유</label
+                  >
+                  <textarea
+                    id="excuseLateReason"
+                    class="w-full rounded-lg border-gray-300 resize-none"
+                    rows="3"
+                    required
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  인정지각 처리
+                </button>
+              </form>
+            </div>
+
+            <!-- 단체 인정출결 등록 폼 수정 -->
             <div class="bg-gray-50 p-4 rounded-lg">
               <h3 class="text-lg font-semibold mb-3">단체 인정출결 등록</h3>
+              <div class="flex space-x-4 mb-4">
+                <button
+                  onclick="toggleGroupForm('absence')"
+                  id="groupAbsenceBtn"
+                  class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  단체 인정결석
+                </button>
+                <button
+                  onclick="toggleGroupForm('late')"
+                  id="groupLateBtn"
+                  class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  단체 인정지각
+                </button>
+              </div>
+              
+              <!-- 단체 인정결석 폼 -->
               <form id="groupExcuseForm" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                   <div>
@@ -558,9 +637,89 @@
                 </div>
                 <button
                   type="submit"
-                  class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                  class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
                 >
-                  단체 인정출결 처리
+                  단체 인정결석 처리
+                </button>
+              </form>
+
+              <!-- 단체 인정지각 폼 -->
+              <form id="groupExcuseLateForm" class="space-y-4 hidden">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >날짜</label
+                    >
+                    <input
+                      type="date"
+                      id="groupExcuseLateDate"
+                      class="w-full rounded-lg border-gray-300"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >학년</label
+                    >
+                    <select
+                      id="groupExcuseLateGrade"
+                      class="w-full rounded-lg border-gray-300"
+                    >
+                      <option value="">전체</option>
+                      <option value="1">1학년</option>
+                      <option value="2">2학년</option>
+                      <option value="3">3학년</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >반</label
+                    >
+                    <select
+                      id="groupExcuseLateClass"
+                      class="w-full rounded-lg border-gray-300"
+                    >
+                      <option value="">전체</option>
+                      <option value="1">1반</option>
+                      <option value="2">2반</option>
+                      <option value="3">3반</option>
+                      <option value="4">4반</option>
+                      <option value="5">5반</option>
+                      <option value="6">6반</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1"
+                      >지각 시간(분)</label
+                    >
+                    <input
+                      type="number"
+                      id="groupExcuseLateMinutes"
+                      class="w-full rounded-lg border-gray-300"
+                      min="1"
+                      max="180"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >사유</label
+                  >
+                  <textarea
+                    id="groupExcuseLateReason"
+                    class="w-full rounded-lg border-gray-300 resize-none"
+                    rows="3"
+                    required
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  단체 인정지각 처리
                 </button>
               </form>
             </div>
@@ -3673,6 +3832,97 @@
           settingsForm.addEventListener("submit", saveAttendanceSettings);
         }
       });
+
+      // 개별 인정지각 처리 이벤트 리스너
+      document.getElementById("excuseLateForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        try {
+          const response = await axios.post(
+            "/api/attendance/excuse-late",
+            {
+              studentId: document.getElementById("excuseLateStudentId").value,
+              date: document.getElementById("excuseLateDate").value,
+              reason: document.getElementById("excuseLateReason").value,
+              lateMinutes: document.getElementById("excuseLateMinutes").value,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          showToast(response.data.message, "success");
+          document.getElementById("excuseLateForm").reset();
+          await updateExcusedList();
+        } catch (error) {
+          showToast(
+            error.response?.data?.message || "인정지각 처리 중 오류가 발생했습니다.",
+            "error"
+          );
+        }
+      });
+
+      // 단체 인정지각 처리 이벤트 리스너
+      document.getElementById("groupExcuseLateForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        try {
+          const filters = {
+            grade: document.getElementById("groupExcuseLateGrade").value,
+            class: document.getElementById("groupExcuseLateClass").value,
+          };
+
+          // 필터 값이 비어있으면 해당 속성 제거
+          if (!filters.grade) delete filters.grade;
+          if (!filters.class) delete filters.class;
+
+          const response = await axios.post(
+            "/api/attendance/excuse-late-group",
+            {
+              date: document.getElementById("groupExcuseLateDate").value,
+              reason: document.getElementById("groupExcuseLateReason").value,
+              lateMinutes: document.getElementById("groupExcuseLateMinutes").value,
+              filters,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          showToast(response.data.message, "success");
+          document.getElementById("groupExcuseLateForm").reset();
+          await updateExcusedList();
+        } catch (error) {
+          showToast(
+            error.response?.data?.message || "단체 인정지각 처리 중 오류가 발생했습니다.",
+            "error"
+          );
+        }
+      });
+
+      // 단체 인정출결 폼 토글 함수
+      function toggleGroupForm(type) {
+        const absenceForm = document.getElementById("groupExcuseForm");
+        const lateForm = document.getElementById("groupExcuseLateForm");
+        const absenceBtn = document.getElementById("groupAbsenceBtn");
+        const lateBtn = document.getElementById("groupLateBtn");
+
+        if (type === "absence") {
+          absenceForm.classList.remove("hidden");
+          lateForm.classList.add("hidden");
+          absenceBtn.classList.add("bg-blue-600");
+          lateBtn.classList.remove("bg-yellow-600");
+        } else {
+          absenceForm.classList.add("hidden");
+          lateForm.classList.remove("hidden");
+          absenceBtn.classList.remove("bg-blue-600");
+          lateBtn.classList.add("bg-yellow-600");
+        }
+      }
     </script>
 
     <!-- PWA 등록 스크립트 추가 -->
