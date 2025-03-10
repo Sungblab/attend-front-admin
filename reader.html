@@ -230,51 +230,61 @@
       async function getCameras() {
         try {
           const devices = await Html5Qrcode.getCameras();
-          devices.forEach((device) => {
-            const option = document.createElement("option");
-            option.value = device.id;
-            option.text = device.label;
-            cameraList.add(option);
-          });
+          if (devices && devices.length > 0) {
+            // 카메라 목록 초기화
+            cameraList.innerHTML = '<option value="">카메라 선택</option>';
 
-          // 저장된 카메라 ID 불러오기 또는 첫 번째 카메라 선택
-          const savedCameraId = localStorage.getItem("selectedCamera");
-          if (savedCameraId) {
-            cameraList.value = savedCameraId;
-          } else if (devices.length > 0) {
-            // 저장된 카메라가 없으면 첫 번째 카메라 선택
-            cameraList.value = devices[0].id;
-            localStorage.setItem("selectedCamera", devices[0].id);
-          }
+            devices.forEach((device) => {
+              const option = document.createElement("option");
+              option.value = device.id;
+              option.text = device.label || `카메라 ${cameraList.length}`;
+              cameraList.add(option);
+            });
 
-          // 카메라가 선택되어 있으면 자동으로 스캔 시작
-          if (cameraList.value) {
-            setTimeout(() => {
-              if (!isScanning) {
-                startButton.click();
-              }
-            }, 1000); // 1초 후 스캔 시작 (카메라 초기화 시간 고려)
+            // 저장된 카메라 ID 불러오기
+            let selectedCameraId = localStorage.getItem("selectedCamera");
+
+            // 저장된 카메라가 없거나 사용할 수 없는 경우 첫 번째 카메라 선택
+            if (
+              !selectedCameraId ||
+              !devices.some((device) => device.id === selectedCameraId)
+            ) {
+              selectedCameraId = devices[0].id;
+              localStorage.setItem("selectedCamera", selectedCameraId);
+            }
+
+            // 카메라 선택
+            cameraList.value = selectedCameraId;
+
+            // 즉시 스캔 시작
+            startButton.click();
+          } else {
+            throw new Error("사용 가능한 카메라가 없습니다.");
           }
         } catch (error) {
           console.error("카메라 목록을 가져오는 데 실패했습니다:", error);
           scanResult.innerText =
-            "카메라를 찾을 수 없습니다. 카메라 연결을 확인해주세요.";
+            "카메라를 찾을 수 없습니다. 카메라 권한을 확인해주세요.";
           scanResult.classList.remove("text-green-600", "text-blue-600");
           scanResult.classList.add("text-red-600");
         }
       }
 
-      // 카메라 선택 변경 이벤트 리스너 추가
+      // 페이지 로드 시 초기화
+      window.addEventListener("load", getCameras);
+
+      // 카메라 선택 변경 이벤트 리스너
       cameraList.addEventListener("change", (e) => {
         const selectedCameraId = e.target.value;
         if (selectedCameraId) {
           localStorage.setItem("selectedCamera", selectedCameraId);
+          if (!isScanning) {
+            startButton.click();
+          }
         } else {
           localStorage.removeItem("selectedCamera");
         }
       });
-
-      getCameras();
 
       const qrCodeSuccessCallback = (decodedText, decodedResult) => {
         if (decodedText !== lastScannedCode) {
