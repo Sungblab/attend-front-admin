@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -463,6 +463,16 @@
           const data = response.data;
           console.log("출석 처리 응답:", data);
 
+          // QR 코드 인식 시 소리 재생 (모든 성공적인 QR 인식에 대해)
+          if (data.type !== "INVALID_QR" && 
+              data.type !== "INVALID_FORMAT" && 
+              data.type !== "CORRUPTED_QR" && 
+              data.type !== "DECRYPTION_ERROR") {
+            checkSound.play().catch((error) => {
+              console.error("소리 재생 실패:", error);
+            });
+          }
+
           // 결과 메시지 표시
           scanResult.innerText = data.message;
           scanResult.classList.remove(
@@ -516,7 +526,7 @@
           const logEntry = document.createElement("div");
           logEntry.classList.add("py-1", "border-b", "border-gray-200");
 
-          // 학생 정보 표시 로직 수정
+          // 학생 정보 표시 로직
           let studentInfo = "";
           if (data.attendance) {
             const { studentId, name } = data.attendance;
@@ -540,10 +550,17 @@
             second: "2-digit",
           });
 
+          // 로그 메시지에 시간 정보 추가
+          let logMessage = data.message;
+          if (data.type.startsWith("ALREADY_")) {
+            const attendanceTime = moment(data.attendance.timestamp).format("HH:mm:ss");
+            logMessage = `${data.message} (최초 기록: ${attendanceTime})`;
+          }
+
           logEntry.innerHTML = `
             <span class="text-gray-500">${timestamp}</span>
             <span class="font-medium ml-2">${studentInfo}</span>
-            <span class="ml-2">${data.message}</span>
+            <span class="ml-2">${logMessage}</span>
           `;
 
           // 로그 항목 스타일 적용
