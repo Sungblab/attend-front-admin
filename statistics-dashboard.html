@@ -1027,17 +1027,7 @@
                     required
                   />
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    자동 결석 처리 시간
-                  </label>
-                  <input
-                    type="time"
-                    id="autoAbsentTime"
-                    class="w-full rounded-lg border-gray-300"
-                    required
-                  />
-                </div>
+                <!-- 자동 결석 처리 시간 필드 제거 -->
               </div>
               <div class="flex justify-between items-center">
                 <div class="flex gap-4">
@@ -1067,18 +1057,6 @@
           </div>
         </section>
 
-        <!-- 처리 로그 섹션 추가 -->
-        <section class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-2xl font-bold mb-4">처리 로그</h2>
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <div
-              id="processLogs"
-              class="space-y-4 max-h-[400px] overflow-y-auto"
-            >
-              <!-- 동적으로 로그가 추가될 영역 -->
-            </div>
-          </div>
-        </section>
       </div>
     </main>
 
@@ -3143,8 +3121,7 @@
             document.getElementById("startTime").value = settings.startTime;
             document.getElementById("normalTime").value = settings.normalTime;
             document.getElementById("lateTime").value = settings.lateTime;
-            document.getElementById("autoAbsentTime").value =
-              settings.autoAbsentTime;
+            // autoAbsentTime 필드 제거됨
 
             // 현재 설정 정보 표시
             updateCurrentSettings(settings);
@@ -3179,10 +3156,7 @@
                   <i class="ri-time-line mr-2"></i>
                   지각 마감: ${settings.lateTime}
                 </li>
-                <li class="flex items-center text-red-600">
-                  <i class="ri-time-line mr-2"></i>
-                  자동 결석 처리: ${settings.autoAbsentTime}
-                </li>
+                <!-- 자동 결석 처리 시간 표시 제거 -->
               </ul>
             </div>
             <div>
@@ -3216,8 +3190,8 @@
             const startTime = document.getElementById("startTime").value;
             const normalTime = document.getElementById("normalTime").value;
             const lateTime = document.getElementById("lateTime").value;
-            const autoAbsentTime =
-              document.getElementById("autoAbsentTime").value;
+            // 자동 결석 처리 시간은 더 이상 사용하지 않음
+            const autoAbsentTime = "09:00"; // 서버 호환성을 위해 기본값 유지
 
             const response = await axios.put(
               "/api/settings/attendance",
@@ -3786,17 +3760,12 @@
         const startTime = document.getElementById("startTime").value;
         const normalTime = document.getElementById("normalTime").value;
         const lateTime = document.getElementById("lateTime").value;
-        const autoAbsentTime = document.getElementById("autoAbsentTime").value;
+        const autoAbsentTime = "09:00"; // 서버 호환성을 위해 기본값 유지
 
         try {
           const response = await axios.put(
             "/api/settings/attendance",
-            {
-              startTime,
-              normalTime,
-              lateTime,
-              autoAbsentTime,
-            },
+            { startTime, normalTime, lateTime, autoAbsentTime },
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
