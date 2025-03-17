@@ -3680,7 +3680,6 @@
       document.addEventListener("DOMContentLoaded", function () {
         // 출기 데이터 로드
         loadAttendanceSettings();
-        loadProcessLogs();
       });
 
       // 토스트 메시지 표시 함수
@@ -3747,7 +3746,6 @@
         try {
           await checkAuthAndRedirect();
           await loadAttendanceSettings();
-          await loadProcessLogs();
         } catch (error) {
           console.error("초기화 중 오류:", error);
           showToast("error", "페이지 초기화 중 오류가 발생했습니다.");
@@ -3777,8 +3775,6 @@
             showToast("success", "출결 설정이 저장되었습니다.");
             // 설정 저장 후 즉시 설정을 다시 불러와서 화면 갱신
             await loadAttendanceSettings();
-            // 처리 로그도 함께 갱신
-            await loadProcessLogs();
           }
         } catch (error) {
           console.error("출결 설정 저장 중 오류:", error);
@@ -3793,7 +3789,6 @@
       // 페이지 로드 시 설정 로드
       document.addEventListener("DOMContentLoaded", async () => {
         await loadAttendanceSettings();
-        await loadProcessLogs();
 
         // 설정 폼 제출 이벤트 리스너 등록
         const settingsForm = document.getElementById("attendanceSettingsForm");
