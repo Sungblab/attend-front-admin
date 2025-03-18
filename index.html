@@ -232,10 +232,27 @@
       function checkLoginStatus() {
         const token = localStorage.getItem("token");
         if (token) {
-          const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-          // 관리자나 리더는 hub.html로, 일반 사용자는 qr.html로 리다이렉트
-          window.location.href =
-            userInfo.isAdmin || userInfo.isReader ? "hub.html" : "qr.html";
+          try {
+            // 토큰 디코딩으로 만료 시간 확인
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            const expiresIn = payload.exp * 1000;
+            const currentTime = Date.now();
+
+            // 토큰이 유효한 경우에만 리다이렉트
+            if (currentTime < expiresIn) {
+              const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+              // 관리자나 리더는 hub.html로, 일반 사용자는 qr.html로 리다이렉트
+              window.location.href =
+                userInfo.isAdmin || userInfo.isReader ? "hub.html" : "qr.html";
+            } else {
+              // 토큰이 만료된 경우 로컬 스토리지 비우기
+              console.log("만료된 토큰 감지, 세션 정리");
+              localStorage.clear();
+            }
+          } catch (error) {
+            console.error("토큰 검증 오류:", error);
+            localStorage.clear();
+          }
         }
       }
 
@@ -261,7 +278,7 @@
             const response = await axios.post("/api/login", {
               studentId,
               password,
-              keepLoggedIn: true,
+              keepLoggedIn: true, // 항상 로그인 유지 활성화
               isWeb: true, // 웹 접속임을 표시
             });
 
@@ -269,6 +286,8 @@
               // 토큰 저장
               localStorage.setItem("token", response.data.accessToken);
               localStorage.setItem("refreshToken", response.data.refreshToken);
+              localStorage.setItem("lastRefreshTime", Date.now().toString());
+              localStorage.setItem("lastActive", Date.now().toString());
 
               // 사용자 정보 저장
               const userInfo = {
