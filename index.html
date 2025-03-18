@@ -145,6 +145,18 @@
                   포함해야 합니다.
                 </div>
               </div>
+              <div class="flex items-center mt-3">
+                <input
+                  type="checkbox"
+                  id="keep-logged-in"
+                  name="keep-logged-in"
+                  class="h-4 w-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                  checked
+                />
+                <label for="keep-logged-in" class="ml-2 text-sm text-gray-600">
+                  로그인 유지
+                </label>
+              </div>
             </div>
             <button
               type="submit"
@@ -257,7 +269,33 @@
       }
 
       // 페이지 로드 시 로그인 상태 확인
-      window.addEventListener("load", checkLoginStatus);
+      window.addEventListener("load", () => {
+        // 로그인 상태 확인
+        checkLoginStatus();
+
+        // URL 파라미터에서 에러 메시지 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = urlParams.get("error");
+        if (errorMsg) {
+          showMessage(decodeURIComponent(errorMsg), true);
+        }
+        
+        // 서비스 워커 메시지 수신 리스너 추가
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'REFRESH_TOKEN_REQUEST') {
+              console.log('서비스 워커가 토큰 갱신을 요청했습니다.');
+              
+              // axios-config.js에 정의된 refreshToken 함수 호출
+              if (typeof refreshToken === 'function') {
+                refreshToken().then(success => {
+                  console.log('서비스 워커 요청에 의한 토큰 갱신:', success ? '성공' : '실패');
+                });
+              }
+            }
+          });
+        }
+      });
 
       // 로그인 폼 제출 이벤트 리스너 수정
       document
@@ -278,7 +316,7 @@
             const response = await axios.post("/api/login", {
               studentId,
               password,
-              keepLoggedIn: true, // 항상 로그인 유지 활성화
+              keepLoggedIn: document.getElementById("keep-logged-in").checked,
               isWeb: true, // 웹 접속임을 표시
             });
 
@@ -288,6 +326,9 @@
               localStorage.setItem("refreshToken", response.data.refreshToken);
               localStorage.setItem("lastRefreshTime", Date.now().toString());
               localStorage.setItem("lastActive", Date.now().toString());
+              
+              // 로그인 유지 상태 저장
+              localStorage.setItem("keepLoggedIn", document.getElementById("keep-logged-in").checked.toString());
 
               // 사용자 정보 저장
               const userInfo = {
@@ -347,19 +388,6 @@
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         return regex.test(password);
       }
-
-      // 페이지 로드 시 실행되는 코드
-      window.addEventListener("load", () => {
-        // 로그인 상태 확인
-        checkLoginStatus();
-
-        // URL 파라미터에서 에러 메시지 확인
-        const urlParams = new URLSearchParams(window.location.search);
-        const errorMsg = urlParams.get("error");
-        if (errorMsg) {
-          showMessage(decodeURIComponent(errorMsg), true);
-        }
-      });
     </script>
   </body>
 </html>

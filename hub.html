@@ -237,8 +237,13 @@
           button.addEventListener("click", () => {
             if (destination === "logout") {
               // 로그아웃 처리
-              localStorage.removeItem("userInfo");
-              localStorage.removeItem("token");
+              localStorage.clear(); // 모든 로컬 스토리지 데이터 삭제
+              
+              // 쿠키도 삭제
+              document.cookie.split(";").forEach(function(c) {
+                document.cookie = c.trim().split("=")[0] + "=;expires=" + new Date(0).toUTCString() + ";path=/";
+              });
+              
               showMessage("로그아웃되었습니다.", "success");
               setTimeout(() => {
                 window.location.href = "index.html";
