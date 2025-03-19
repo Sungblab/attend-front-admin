@@ -133,9 +133,16 @@
         if (!token) {
           localStorage.removeItem("userInfo");
           localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
           window.location.href =
             "index.html?error=" + encodeURIComponent("로그인이 필요합니다.");
           return false;
+        }
+
+        // 새로고침 시 keepLoggedIn 상태 체크 추가
+        const keepLoggedIn = localStorage.getItem("keepLoggedIn") === "true";
+        if (!keepLoggedIn) {
+          localStorage.setItem("keepLoggedIn", "true"); // 로그인 유지 상태 저장
         }
 
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));

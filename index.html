@@ -17,7 +17,10 @@
     />
     <meta name="apple-mobile-web-app-title" content="출결관리" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <meta name="description" content="디지털 출결관리" />
+    <meta
+      name="description"
+      content="디지털 출결관리 - 관리자 시스템 - 관리자"
+    />
     <!-- PWA 설정 끝 -->
 
     <link
@@ -145,16 +148,18 @@
                   포함해야 합니다.
                 </div>
               </div>
-              <div class="flex items-center mt-3">
+              <div class="flex items-center">
                 <input
                   type="checkbox"
                   id="keep-logged-in"
                   name="keep-logged-in"
                   class="h-4 w-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
-                  checked
                 />
-                <label for="keep-logged-in" class="ml-2 text-sm text-gray-600">
-                  로그인 유지
+                <label
+                  for="keep-logged-in"
+                  class="ml-2 block text-sm text-gray-700"
+                >
+                  로그인 상태 유지
                 </label>
               </div>
             </div>
@@ -244,98 +249,15 @@
       function checkLoginStatus() {
         const token = localStorage.getItem("token");
         if (token) {
-          try {
-            // 토큰 디코딩으로 만료 시간 확인
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            const expiresIn = payload.exp * 1000;
-            const currentTime = Date.now();
-
-            // 토큰이 유효한 경우에만 리다이렉트
-            if (currentTime < expiresIn) {
-              const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-              // 관리자나 리더는 hub.html로, 일반 사용자는 qr.html로 리다이렉트
-              window.location.href =
-                userInfo.isAdmin || userInfo.isReader ? "hub.html" : "qr.html";
-            } else {
-              // 토큰이 만료된 경우, keepLoggedIn 상태를 유지하며 리프레시를 시도
-              console.log("만료된 토큰 감지, 리프레시 토큰으로 갱신 시도");
-
-              // keepLoggedIn 값 보존
-              const keepLoggedIn = localStorage.getItem("keepLoggedIn");
-
-              // 리프레시 토큰이 있으면 갱신 시도
-              const refreshToken =
-                localStorage.getItem("refreshToken") ||
-                getCookie("refresh_token");
-              if (refreshToken) {
-                // localStorage 항목을 개별적으로 삭제하여 keepLoggedIn 값 보존
-                localStorage.removeItem("token");
-                localStorage.removeItem("userInfo");
-                localStorage.removeItem("lastRefreshTime");
-                localStorage.removeItem("lastActive");
-
-                // keepLoggedIn 값 다시 저장
-                if (keepLoggedIn) {
-                  localStorage.setItem("keepLoggedIn", keepLoggedIn);
-                }
-
-                if (typeof refreshToken === "function") {
-                  refreshToken();
-                }
-              }
-            }
-          } catch (error) {
-            console.error("토큰 검증 오류:", error);
-
-            // 오류 발생 시에도 keepLoggedIn 상태 보존
-            const keepLoggedIn = localStorage.getItem("keepLoggedIn");
-
-            // localStorage 항목을 개별적으로 삭제하여 keepLoggedIn 값 보존
-            localStorage.removeItem("token");
-            localStorage.removeItem("refreshToken");
-            localStorage.removeItem("userInfo");
-            localStorage.removeItem("lastRefreshTime");
-            localStorage.removeItem("lastActive");
-
-            // keepLoggedIn 값 다시 저장
-            if (keepLoggedIn) {
-              localStorage.setItem("keepLoggedIn", keepLoggedIn);
-            }
-          }
+          const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+          // 관리자나 리더는 hub.html로, 일반 사용자는 qr.html로 리다이렉트
+          window.location.href =
+            userInfo.isAdmin || userInfo.isReader ? "hub.html" : "qr.html";
         }
       }
 
       // 페이지 로드 시 로그인 상태 확인
-      window.addEventListener("load", () => {
-        // 로그인 상태 확인
-        checkLoginStatus();
-
-        // URL 파라미터에서 에러 메시지 확인
-        const urlParams = new URLSearchParams(window.location.search);
-        const errorMsg = urlParams.get("error");
-        if (errorMsg) {
-          showMessage(decodeURIComponent(errorMsg), true);
-        }
-
-        // 서비스 워커 메시지 수신 리스너 추가
-        if (navigator.serviceWorker) {
-          navigator.serviceWorker.addEventListener("message", (event) => {
-            if (event.data && event.data.type === "REFRESH_TOKEN_REQUEST") {
-              console.log("서비스 워커가 토큰 갱신을 요청했습니다.");
-
-              // axios-config.js에 정의된 refreshToken 함수 호출
-              if (typeof refreshToken === "function") {
-                refreshToken().then((success) => {
-                  console.log(
-                    "서비스 워커 요청에 의한 토큰 갱신:",
-                    success ? "성공" : "실패"
-                  );
-                });
-              }
-            }
-          });
-        }
-      });
+      window.addEventListener("load", checkLoginStatus);
 
       // 로그인 폼 제출 이벤트 리스너 수정
       document
@@ -345,6 +267,8 @@
 
           const studentId = document.getElementById("student-id").value;
           const password = document.getElementById("password").value;
+          const keepLoggedIn =
+            document.getElementById("keep-logged-in").checked;
 
           // 입력값 검증
           if (!studentId || !password) {
@@ -356,23 +280,25 @@
             const response = await axios.post("/api/login", {
               studentId,
               password,
-              keepLoggedIn: document.getElementById("keep-logged-in").checked,
+              keepLoggedIn,
               isWeb: true, // 웹 접속임을 표시
             });
 
             if (response.data.success) {
-              // 로그인 유지 상태 저장
-              const keepLoggedIn =
-                document.getElementById("keep-logged-in").checked;
-              localStorage.setItem("keepLoggedIn", keepLoggedIn.toString());
+              // 토큰 저장
+              localStorage.setItem("token", response.data.accessToken);
+              localStorage.setItem("refreshToken", response.data.refreshToken);
 
-              // axios-config.js의 storeTokens 함수 사용하여 통합 저장
-              storeTokens(
-                response.data.accessToken,
-                response.data.refreshToken,
-                response.data.user,
-                keepLoggedIn
-              );
+              // 사용자 정보 저장
+              const userInfo = {
+                id: response.data.user.id,
+                studentId: response.data.user.studentId,
+                name: response.data.user.name,
+                isAdmin: response.data.user.isAdmin,
+                isReader: response.data.user.isReader,
+              };
+              localStorage.setItem("userInfo", JSON.stringify(userInfo));
+              localStorage.setItem("keepLoggedIn", keepLoggedIn);
 
               // 성공 메시지 표시
               showMessage("로그인 성공! 이동합니다...", false);
@@ -422,6 +348,95 @@
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         return regex.test(password);
       }
+
+      // axios 인터셉터 설정을 수정합니다
+      const setupAxiosInterceptors = () => {
+        // 요청 인터셉터
+        axios.interceptors.request.use(
+          (config) => {
+            // 로그인 요청인 경우 토큰을 추가하지 않음
+            if (config.url === "/api/login") {
+              return config;
+            }
+
+            const token = localStorage.getItem("token");
+            if (token) {
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+          },
+          (error) => {
+            return Promise.reject(error);
+          }
+        );
+
+        // 응답 인터셉터
+        axios.interceptors.response.use(
+          (response) => response,
+          async (error) => {
+            const originalRequest = error.config;
+
+            // 로그인 요청에서 발생한 에러는 토큰 갱신을 시도하지 않음
+            if (originalRequest.url === "/api/login") {
+              return Promise.reject(error);
+            }
+
+            // 토큰 만료 에러(401)이고 재시도하지 않은 요청일 경우
+            if (error.response.status === 401 && !originalRequest._retry) {
+              originalRequest._retry = true;
+
+              try {
+                // 리프레시 토큰으로 새 액세스 토큰 발급 요청
+                const refreshToken = localStorage.getItem("refreshToken");
+                const keepLoggedIn =
+                  localStorage.getItem("keepLoggedIn") === "true";
+                const response = await axios.post("/api/refresh-token", {
+                  refreshToken,
+                  keepLoggedIn,
+                });
+
+                if (response.data.accessToken) {
+                  // 새 토큰 저장
+                  localStorage.setItem("token", response.data.accessToken);
+
+                  // 새 토큰으로 헤더 업데이트
+                  originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
+
+                  // 실패했던 요청 재시도
+                  return axios(originalRequest);
+                }
+              } catch (refreshError) {
+                // 리프레시 토큰도 만료된 경우
+                console.error("Refresh token error:", refreshError);
+
+                // 로그인 페이지로 리다이렉트
+                localStorage.clear();
+                window.location.href =
+                  "/index.html?error=" +
+                  encodeURIComponent(
+                    "세션이 만료되었습니다. 다시 로그인해주세요."
+                  );
+
+                return Promise.reject(refreshError);
+              }
+            }
+            return Promise.reject(error);
+          }
+        );
+      };
+
+      // 페이지 로드 시 인터셉터 설정
+      window.addEventListener("load", () => {
+        setupAxiosInterceptors();
+        checkLoginStatus();
+
+        // URL 파라미터에서 에러 메시지 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = urlParams.get("error");
+        if (errorMsg) {
+          showMessage(decodeURIComponent(errorMsg), true);
+        }
+      });
     </script>
   </body>
 </html>
