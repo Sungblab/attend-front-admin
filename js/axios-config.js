@@ -6,8 +6,8 @@ axios.defaults.baseURL =
 let isRefreshing = false;
 let tokenRefreshTimer;
 let lastRefreshTime = parseInt(localStorage.getItem("lastRefreshTime") || "0");
-const MIN_REFRESH_INTERVAL = 60 * 1000; // 1분
-const TOKEN_CHECK_INTERVAL = 10 * 60 * 1000; // 10분마다 토큰 체크
+const MIN_REFRESH_INTERVAL = 60 * 60 * 1000; // 1시간 (기존 1분에서 변경)
+const TOKEN_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24시간마다 토큰 체크 (기존 10분에서 변경)
 
 // 쿠키 관련 유틸리티 함수
 function setCookie(name, value, days) {
@@ -36,10 +36,9 @@ function storeTokens(accessToken, refreshToken, userInfo, keepLoggedIn) {
   localStorage.setItem("userInfo", JSON.stringify(userInfo));
   localStorage.setItem("lastRefreshTime", Date.now().toString());
   localStorage.setItem("lastActive", Date.now().toString());
-  
-  // 리프레시 토큰을 쿠키에도 저장 (백업용)
-  const days = keepLoggedIn ? 365 : 30;
-  setCookie("refresh_token", refreshToken, days);
+
+  // 리프레시 토큰을 쿠키에도 저장 (백업용) - 항상 1년으로 설정
+  setCookie("refresh_token", refreshToken, 365);
 }
 
 // 토큰 갱신 함수
@@ -50,7 +49,7 @@ async function refreshToken() {
   try {
     // 로컬 스토리지에서 리프레시 토큰 확인
     let refreshToken = localStorage.getItem("refreshToken");
-    
+
     // 로컬 스토리지에 없으면 쿠키에서 확인 (백업)
     if (!refreshToken) {
       refreshToken = getCookie("refresh_token");
@@ -63,7 +62,7 @@ async function refreshToken() {
 
     console.log("토큰 갱신 시도:", new Date().toLocaleTimeString());
     const keepLoggedIn = localStorage.getItem("keepLoggedIn") === "true";
-    
+
     const response = await axios.post("/api/refresh-token", {
       refreshToken,
       keepLoggedIn,
@@ -76,24 +75,38 @@ async function refreshToken() {
     lastRefreshTime = Date.now();
     localStorage.setItem("lastRefreshTime", lastRefreshTime.toString());
     console.log("토큰 갱신 성공:", new Date().toLocaleTimeString());
-    
+
     // 서비스 워커에게 토큰 갱신 알림 (있는 경우)
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
-        type: 'TOKEN_REFRESHED',
+        type: "TOKEN_REFRESHED",
         token: accessToken,
-        refreshToken: newRefreshToken
+        refreshToken: newRefreshToken,
       });
     }
-    
+
     return true;
   } catch (error) {
     console.error("토큰 갱신 실패:", error);
-    
-    // 쿠키에서도 토큰 삭제
+
+    // 로그인 유지 설정 저장
+    const keepLoggedIn = localStorage.getItem("keepLoggedIn");
+
+    // 쿠키와 localStorage 초기화 (keepLoggedIn 제외)
     deleteCookie("refresh_token");
-    localStorage.clear();
-    
+
+    // localStorage 항목을 개별적으로 삭제하여 keepLoggedIn 값 보존
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("lastRefreshTime");
+    localStorage.removeItem("lastActive");
+
+    // keepLoggedIn 값 다시 저장
+    if (keepLoggedIn) {
+      localStorage.setItem("keepLoggedIn", keepLoggedIn);
+    }
+
     window.location.href =
       "index.html?error=" +
       encodeURIComponent("세션이 만료되었습니다. 다시 로그인해주세요.");
@@ -155,7 +168,8 @@ axios.interceptors.response.use(
 // 토큰 유효성 확인 함수
 function checkTokenValidity(forceRefresh = false) {
   const token = localStorage.getItem("token");
-  
+  const keepLoggedIn = localStorage.getItem("keepLoggedIn") === "true";
+
   // 토큰이 없는 경우
   if (!token) {
     // 쿠키에 리프레시 토큰이 있는지 확인
@@ -163,6 +177,10 @@ function checkTokenValidity(forceRefresh = false) {
     if (cookieRefreshToken) {
       console.log("쿠키에서 리프레시 토큰 발견, 복구 시도");
       localStorage.setItem("refreshToken", cookieRefreshToken);
+      // keepLoggedIn 값이 없으면 기본적으로 true로 설정 (쿠키에서 복구한 경우)
+      if (localStorage.getItem("keepLoggedIn") === null) {
+        localStorage.setItem("keepLoggedIn", "true");
+      }
       refreshToken(); // 토큰 복구 시도
       return true;
     }
@@ -176,24 +194,43 @@ function checkTokenValidity(forceRefresh = false) {
     const currentTime = Date.now();
     const timeUntilExpiry = expiresIn - currentTime;
 
-    console.log(`토큰 상태 확인: 만료까지 ${Math.floor(timeUntilExpiry / 1000 / 60)}분 남음`);
+    console.log(
+      `토큰 상태 확인: 만료까지 ${Math.floor(
+        timeUntilExpiry / 1000 / 60
+      )}분 남음, 로그인 유지: ${keepLoggedIn}`
+    );
 
-    // 만료 시간 확인 (60분 이내로 남았거나 강제 갱신 요청된 경우)
-    if (currentTime >= expiresIn || timeUntilExpiry < 60 * 60 * 1000 || forceRefresh) {
+    // 쿠키와 localStorage 간의 동기화 확인
+    const localRefreshToken = localStorage.getItem("refreshToken");
+    const cookieRefreshToken = getCookie("refresh_token");
+
+    // 로컬 스토리지에는 있지만 쿠키에는 없는 경우, 쿠키에도 저장
+    if (localRefreshToken && !cookieRefreshToken && keepLoggedIn) {
+      console.log("리프레시 토큰을 쿠키에 동기화합니다");
+      const days = keepLoggedIn ? 365 : 30;
+      setCookie("refresh_token", localRefreshToken, days);
+    }
+
+    // 만료 시간 확인 (24시간 이내로 남았거나 강제 갱신 요청된 경우)
+    if (
+      currentTime >= expiresIn ||
+      timeUntilExpiry < 24 * 60 * 60 * 1000 ||
+      forceRefresh
+    ) {
       console.log("토큰 갱신이 필요함, 갱신 시도");
       refreshToken();
-      
+
       // 서비스 워커에 토큰 갱신 시작 요청
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
-          type: 'START_TOKEN_REFRESH'
+          type: "START_TOKEN_REFRESH",
         });
       }
     } else {
-      // 만료 30분 전에 갱신 타이머 설정 (기존 타이머 취소 후 재설정)
+      // 만료 48시간 전에 갱신 타이머 설정 (기존 타이머 취소 후 재설정)
       const timeUntilRefresh = Math.max(
         1000,
-        expiresIn - currentTime - 30 * 60 * 1000
+        expiresIn - currentTime - 48 * 60 * 60 * 1000
       );
       console.log(
         `토큰 만료 예정: ${new Date(expiresIn).toLocaleTimeString()}`
@@ -206,7 +243,7 @@ function checkTokenValidity(forceRefresh = false) {
 
       if (tokenRefreshTimer) clearTimeout(tokenRefreshTimer);
       tokenRefreshTimer = setTimeout(refreshToken, timeUntilRefresh);
-      
+
       // 추가: 페이지가 계속 열려있을 때도 주기적으로 토큰 상태 확인
       setTimeout(() => checkTokenValidity(), TOKEN_CHECK_INTERVAL);
     }
@@ -216,7 +253,22 @@ function checkTokenValidity(forceRefresh = false) {
     return true;
   } catch (error) {
     console.error("토큰 검증 실패:", error);
-    localStorage.clear();
+
+    // 로그인 유지 설정 저장
+    const keepLoggedIn = localStorage.getItem("keepLoggedIn");
+
+    // localStorage 항목을 개별적으로 삭제하여 keepLoggedIn 값 보존
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("lastRefreshTime");
+    localStorage.removeItem("lastActive");
+
+    // keepLoggedIn 값 다시 저장
+    if (keepLoggedIn) {
+      localStorage.setItem("keepLoggedIn", keepLoggedIn);
+    }
+
     deleteCookie("refresh_token");
     window.location.href =
       "index.html?error=" +
@@ -227,25 +279,26 @@ function checkTokenValidity(forceRefresh = false) {
 
 // 서비스 워커 등록
 async function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
+  if ("serviceWorker" in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('/js/token-service-worker.js');
-      console.log('서비스 워커가 등록되었습니다:', registration.scope);
+      const registration = await navigator.serviceWorker.register(
+        "/js/token-service-worker.js"
+      );
+      console.log("서비스 워커가 등록되었습니다:", registration.scope);
 
       // 기존 토큰이 있으면 서비스 워커에게 알림
-      const token = localStorage.getItem('token');
-      const refreshToken = localStorage.getItem('refreshToken');
-      
+      const token = localStorage.getItem("token");
+      const refreshToken = localStorage.getItem("refreshToken");
+
       if (token && refreshToken && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
-          type: 'START_TOKEN_REFRESH',
+          type: "START_TOKEN_REFRESH",
           token,
-          refreshToken
+          refreshToken,
         });
       }
-      
     } catch (error) {
-      console.log('서비스 워커 등록 실패:', error);
+      console.log("서비스 워커 등록 실패:", error);
     }
   }
 }
@@ -254,18 +307,18 @@ async function registerServiceWorker() {
 document.addEventListener("DOMContentLoaded", () => {
   // 서비스 워커 등록 시도
   registerServiceWorker();
-  
+
   // 마지막 새로고침 시간 확인
   const lastActive = parseInt(localStorage.getItem("lastActive") || "0");
   const timeSinceLastActive = Date.now() - lastActive;
-  
+
   // 1시간 이상 지났으면 강제로 토큰 갱신 시도
   const forceRefresh = timeSinceLastActive > 60 * 60 * 1000;
-  
+
   if (forceRefresh) {
     console.log("장시간 비활성 상태 감지, 토큰 강제 갱신 시도");
   }
-  
+
   checkTokenValidity(forceRefresh);
 });
 
@@ -274,10 +327,14 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     const lastActive = parseInt(localStorage.getItem("lastActive") || "0");
     const timeSinceLastActive = Date.now() - lastActive;
-    
+
     // 마지막 활성 시간으로부터 5분 이상 지났으면 토큰 유효성 재확인
     if (timeSinceLastActive > 5 * 60 * 1000) {
-      console.log(`페이지 복귀 감지, 비활성 시간: ${Math.floor(timeSinceLastActive/1000/60)}분, 토큰 유효성 재확인`);
+      console.log(
+        `페이지 복귀 감지, 비활성 시간: ${Math.floor(
+          timeSinceLastActive / 1000 / 60
+        )}분, 토큰 유효성 재확인`
+      );
       checkTokenValidity(timeSinceLastActive > 30 * 60 * 1000); // 30분 이상 지났으면 강제 갱신
     }
   }
@@ -287,4 +344,3 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("beforeunload", () => {
   localStorage.setItem("lastActive", Date.now().toString());
 });
-

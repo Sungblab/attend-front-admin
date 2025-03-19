@@ -257,13 +257,50 @@
               window.location.href =
                 userInfo.isAdmin || userInfo.isReader ? "hub.html" : "qr.html";
             } else {
-              // 토큰이 만료된 경우 로컬 스토리지 비우기
-              console.log("만료된 토큰 감지, 세션 정리");
-              localStorage.clear();
+              // 토큰이 만료된 경우, keepLoggedIn 상태를 유지하며 리프레시를 시도
+              console.log("만료된 토큰 감지, 리프레시 토큰으로 갱신 시도");
+
+              // keepLoggedIn 값 보존
+              const keepLoggedIn = localStorage.getItem("keepLoggedIn");
+
+              // 리프레시 토큰이 있으면 갱신 시도
+              const refreshToken =
+                localStorage.getItem("refreshToken") ||
+                getCookie("refresh_token");
+              if (refreshToken) {
+                // localStorage 항목을 개별적으로 삭제하여 keepLoggedIn 값 보존
+                localStorage.removeItem("token");
+                localStorage.removeItem("userInfo");
+                localStorage.removeItem("lastRefreshTime");
+                localStorage.removeItem("lastActive");
+
+                // keepLoggedIn 값 다시 저장
+                if (keepLoggedIn) {
+                  localStorage.setItem("keepLoggedIn", keepLoggedIn);
+                }
+
+                if (typeof refreshToken === "function") {
+                  refreshToken();
+                }
+              }
             }
           } catch (error) {
             console.error("토큰 검증 오류:", error);
-            localStorage.clear();
+
+            // 오류 발생 시에도 keepLoggedIn 상태 보존
+            const keepLoggedIn = localStorage.getItem("keepLoggedIn");
+
+            // localStorage 항목을 개별적으로 삭제하여 keepLoggedIn 값 보존
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("userInfo");
+            localStorage.removeItem("lastRefreshTime");
+            localStorage.removeItem("lastActive");
+
+            // keepLoggedIn 값 다시 저장
+            if (keepLoggedIn) {
+              localStorage.setItem("keepLoggedIn", keepLoggedIn);
+            }
           }
         }
       }
@@ -279,17 +316,20 @@
         if (errorMsg) {
           showMessage(decodeURIComponent(errorMsg), true);
         }
-        
+
         // 서비스 워커 메시지 수신 리스너 추가
         if (navigator.serviceWorker) {
-          navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'REFRESH_TOKEN_REQUEST') {
-              console.log('서비스 워커가 토큰 갱신을 요청했습니다.');
-              
+          navigator.serviceWorker.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "REFRESH_TOKEN_REQUEST") {
+              console.log("서비스 워커가 토큰 갱신을 요청했습니다.");
+
               // axios-config.js에 정의된 refreshToken 함수 호출
-              if (typeof refreshToken === 'function') {
-                refreshToken().then(success => {
-                  console.log('서비스 워커 요청에 의한 토큰 갱신:', success ? '성공' : '실패');
+              if (typeof refreshToken === "function") {
+                refreshToken().then((success) => {
+                  console.log(
+                    "서비스 워커 요청에 의한 토큰 갱신:",
+                    success ? "성공" : "실패"
+                  );
                 });
               }
             }
@@ -321,24 +361,18 @@
             });
 
             if (response.data.success) {
-              // 토큰 저장
-              localStorage.setItem("token", response.data.accessToken);
-              localStorage.setItem("refreshToken", response.data.refreshToken);
-              localStorage.setItem("lastRefreshTime", Date.now().toString());
-              localStorage.setItem("lastActive", Date.now().toString());
-              
               // 로그인 유지 상태 저장
-              localStorage.setItem("keepLoggedIn", document.getElementById("keep-logged-in").checked.toString());
+              const keepLoggedIn =
+                document.getElementById("keep-logged-in").checked;
+              localStorage.setItem("keepLoggedIn", keepLoggedIn.toString());
 
-              // 사용자 정보 저장
-              const userInfo = {
-                id: response.data.user.id,
-                studentId: response.data.user.studentId,
-                name: response.data.user.name,
-                isAdmin: response.data.user.isAdmin,
-                isReader: response.data.user.isReader,
-              };
-              localStorage.setItem("userInfo", JSON.stringify(userInfo));
+              // axios-config.js의 storeTokens 함수 사용하여 통합 저장
+              storeTokens(
+                response.data.accessToken,
+                response.data.refreshToken,
+                response.data.user,
+                keepLoggedIn
+              );
 
               // 성공 메시지 표시
               showMessage("로그인 성공! 이동합니다...", false);
