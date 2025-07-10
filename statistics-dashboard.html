@@ -91,6 +91,14 @@
             인정출결 관리
           </button>
           <button
+            onclick="showPage('selfAbsent')"
+            id="selfAbsentTab"
+            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap flex items-center justify-center"
+          >
+            <i class="ri-file-text-line mr-2"></i>
+            자진 결석 관리
+          </button>
+          <button
             onclick="showPage('holiday')"
             id="holidayTab"
             class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap flex items-center justify-center"
@@ -791,6 +799,60 @@
         </section>
       </div>
 
+      <!-- 자진 결석 관리 페이지 -->
+      <div id="selfAbsentPage" class="page-content hidden">
+        <section class="bg-white rounded-lg shadow mb-6 p-6">
+          <h2 class="text-2xl font-bold mb-4">자진 결석 관리</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- 자진 결석 목록 -->
+            <div class="bg-gray-50 p-4 rounded-lg lg:col-span-2">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">자진 결석 신고 목록</h3>
+                <div class="flex gap-2">
+                  <select id="selfAbsentGrade" class="rounded-lg border-gray-300">
+                    <option value="">전체 학년</option>
+                    <option value="1">1학년</option>
+                    <option value="2">2학년</option>
+                    <option value="3">3학년</option>
+                  </select>
+                  <select id="selfAbsentClass" class="rounded-lg border-gray-300">
+                    <option value="">전체 반</option>
+                    <option value="1">1반</option>
+                    <option value="2">2반</option>
+                    <option value="3">3반</option>
+                    <option value="4">4반</option>
+                    <option value="5">5반</option>
+                    <option value="6">6반</option>
+                  </select>
+                  <input
+                    type="date"
+                    id="selfAbsentStartDate"
+                    class="rounded-lg border-gray-300"
+                  />
+                  <input
+                    type="date"
+                    id="selfAbsentEndDate"
+                    class="rounded-lg border-gray-300"
+                  />
+                  <button
+                    onclick="updateSelfAbsentList()"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    조회
+                  </button>
+                </div>
+              </div>
+              <div
+                id="selfAbsentList"
+                class="space-y-2 max-h-[600px] overflow-y-auto"
+              >
+                <!-- 동적으로 추가될 내용 -->
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <!-- 휴일 관리 페이지 -->
       <div id="holidayPage" class="page-content hidden">
         <section class="bg-white rounded-lg shadow mb-6 p-6">
@@ -1189,6 +1251,9 @@
             break;
           case "excused":
             updateExcusedList();
+            break;
+          case "selfAbsent":
+            updateSelfAbsentList();
             break;
           case "holiday":
             fetchHolidays();
@@ -3887,6 +3952,155 @@
           lateBtn.classList.add("bg-yellow-600");
         }
       }
+
+      // 자진 결석 목록 업데이트 함수
+      async function updateSelfAbsentList() {
+        try {
+          const grade = document.getElementById("selfAbsentGrade").value;
+          const classNum = document.getElementById("selfAbsentClass").value;
+          const startDate = document.getElementById("selfAbsentStartDate").value;
+          const endDate = document.getElementById("selfAbsentEndDate").value;
+
+          const params = new URLSearchParams();
+          if (grade) params.append("grade", grade);
+          if (classNum) params.append("classNum", classNum);
+          if (startDate) params.append("startDate", startDate);
+          if (endDate) params.append("endDate", endDate);
+
+          const response = await axios.get(`/api/attendance/self-absent?${params}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (response.data.success) {
+            const selfAbsentList = document.getElementById("selfAbsentList");
+            if (response.data.selfAbsent.length === 0) {
+              selfAbsentList.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                  자진 결석 신고가 없습니다.
+                </div>
+              `;
+            } else {
+              selfAbsentList.innerHTML = response.data.selfAbsent
+                .map(
+                  (selfAbsent) => `
+                  <div class="bg-white p-4 rounded-lg shadow border">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-4 mb-2">
+                          <span class="font-semibold">${selfAbsent.studentName}</span>
+                          <span class="text-sm text-gray-600">
+                            ${selfAbsent.grade}학년 ${selfAbsent.class}반 ${selfAbsent.number}번
+                          </span>
+                          <span class="text-xs text-gray-500">
+                            (${selfAbsent.studentId})
+                          </span>
+                        </div>
+                        <div class="flex items-center gap-4 mb-2">
+                          <span class="text-sm text-gray-600">
+                            신고일: ${moment(selfAbsent.date).format("YYYY-MM-DD")}
+                          </span>
+                          <span class="text-xs text-gray-500">
+                            신고시간: ${moment(selfAbsent.selfReportedAt).format("YYYY-MM-DD HH:mm:ss")}
+                          </span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                          <span class="text-sm font-medium text-gray-700">사유:</span>
+                          <p class="text-sm text-gray-600 mt-1">${selfAbsent.reason}</p>
+                        </div>
+                      </div>
+                                             <div class="flex flex-col gap-2 ml-4">
+                         <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs text-center">
+                           승인 대기
+                         </span>
+                         <div class="flex gap-1">
+                           <button
+                             onclick="approveSelfAbsent('${selfAbsent._id}', true)"
+                             class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs"
+                           >
+                             승인
+                           </button>
+                           <button
+                             onclick="approveSelfAbsent('${selfAbsent._id}', false)"
+                             class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+                           >
+                             반려
+                           </button>
+                         </div>
+                       </div>
+                    </div>
+                  </div>
+                `
+                )
+                .join("");
+            }
+          }
+        } catch (error) {
+          console.error("자진 결석 목록 조회 중 오류:", error);
+          showToast(
+            "error",
+            error.response?.data?.message || "자진 결석 목록을 불러오는데 실패했습니다."
+          );
+        }
+      }
+
+      // 자진 결석 승인/반려 함수
+      async function approveSelfAbsent(attendanceId, approved) {
+        const adminReason = prompt(
+          approved ? "승인 사유를 입력하세요 (선택사항):" : "반려 사유를 입력하세요:"
+        );
+        
+        if (!approved && !adminReason) {
+          showToast("error", "반려 사유를 입력해주세요.");
+          return;
+        }
+
+        try {
+          const response = await axios.post(
+            "/api/attendance/self-absent/approve",
+            {
+              attendanceId,
+              approved,
+              adminReason,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          if (response.data.success) {
+            showToast("success", response.data.message);
+            await updateSelfAbsentList();
+          }
+        } catch (error) {
+          console.error("자진 결석 승인/거부 중 오류:", error);
+          showToast(
+            "error",
+            error.response?.data?.message || "처리 중 오류가 발생했습니다."
+          );
+        }
+      }
+
+      // 자진 결석 목록 페이지 이벤트 리스너 설정
+      document.addEventListener("DOMContentLoaded", function() {
+        // 자진 결석 필터 이벤트 리스너 추가
+        const selfAbsentElements = [
+          'selfAbsentGrade',
+          'selfAbsentClass',
+          'selfAbsentStartDate',
+          'selfAbsentEndDate'
+        ];
+        
+        selfAbsentElements.forEach(id => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.addEventListener('change', updateSelfAbsentList);
+          }
+        });
+      });
     </script>
 
     <!-- PWA 등록 스크립트 추가 -->
